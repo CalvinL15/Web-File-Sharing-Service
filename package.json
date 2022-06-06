@@ -1,0 +1,16 @@
+{
+  "name": "dbw-final-project",
+  "version": "1.0.0",
+  "description": "metadata for the dbw final project",
+  "main": "index.js",
+  "repository": "git@github.com:CalvinL15/dbw-final-project.git",
+  "author": "Calvin Liusnando",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "express": "^4.18.1"
+  },
+  "scripts": {
+    "start": "node server/index.js"
+  }
+}
