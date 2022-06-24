@@ -6,10 +6,10 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import logo from '../img/tuc-white.png';
 
-export default function header() {
+export default function Header() {
   return (
     <Box sx={{ flexGrow: 1, position: 'fixed' }}>
-      <AppBar position="fixed" sx={{ backgroundColor: '#6A8A26' }}>
+      <AppBar position='fixed' sx={{ backgroundColor: '#6A8A26' }}>
         <Toolbar>
           <Grid>
             <img src={logo} alt="logo" height='100vmin' width='140vmin' />

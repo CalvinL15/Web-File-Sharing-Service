@@ -14,7 +14,6 @@ import './App.css';
 
 function checkPathValidity(pathname: String){
   const params: String[] = pathname.split("/");
-  console.log(params);
   if(params.length === 1) return true;
   if(params.length === 2 && params[1] === '') return true;
   if(params.length > 3) return false;
