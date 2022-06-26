@@ -1,6 +1,6 @@
 const config = require('./config.json');
 const cors = require('cors');
-const { username, password } = config;
+const { username, password, PORT } = config;
 
 const { Pool, Client } = require('pg');
 
@@ -12,15 +12,15 @@ const cheerio = require('cheerio');
 // allow cookies
 const request = require('request').defaults({ jar: true });
 
-const PORT = process.env.PORT || 8080;
-
 const app = express();
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
 });
 
+const blocklistURL = 'https://www.tu-chemnitz.de/informatik/DVS/blocklist';
+
 // initial authentication process
-request.get('https://www.tu-chemnitz.de/informatik/DVS/blocklist', function (error, response, body) {
+request.get(blocklistURL, function (error, response, body) {
 const wtc_login_url =  response.request._redirect.redirects[0].redirectUri;
 const login_samlds_auth = decodeURIComponent(wtc_login_url).split("Login?")[1];
 let href_url = "";
@@ -69,31 +69,44 @@ app.use(fileUpload({
 }));
 
 const connString = "postgres://dbw_project_db_rw:Ieh2ishe4@pgsql.hrz.tu-chemnitz.de/dbw_project_db";
+const crypto = require("crypto");
 
 const client = new Client(connString);
-console.log(client);
 client.connect();
-client.query('SELECT * FROM files', (err, res) => {
-  console.log(res);
-  client.end();
-})
 
 app.post('/uploadFile', (req, res) => {
-  file = req.files.file;
-  console.log(file);
-  res.json({message : "hello from express!"});
+  const file = req.files.file;
+  const hash = crypto.createHash('sha256');
+  const fileHash = hash.update(file.data).digest('hex');
+  let bool = false;
+  request.get(blocklistURL + "/" + fileHash, function (error, response, body){
+    if (response.statusCode == 210){
+      bool = true;
+    }
+    client.query(`DELETE FROM files WHERE "file_id" = '${fileHash}'`);
+    client.query(`INSERT INTO files ("file_id", "file_name", "file_size", "file_data", "file_type", "is_file_blocked")
+    VALUES ('${fileHash}', '${file.name}', ${file.size}, '${file.data.toString('hex')}', '${file.mimetype}', ${bool})`);
+    res.json({ hashValue : fileHash, fileName: file.name });
+  });
 });
 
 app.post('/uploadFiles', (req, res) => {
-
+  const files = req.files;
+  console.log(files);
 });
 
-app.get('/downloadFile', (req, res) => {
-
+app.get('/downloadFile/:id', (req, res) => {
 });
 
-app.get('/getFileInformation', (req, res) => {
-
+app.get('/getFileInfo/:id', (req, res) => {
+  let data;
+  client.query(`SELECT * FROM files WHERE "file_id" = '${req.params.id}'`, (err, r) => {
+    data = r.rows[0];
+    console.log(data);
+    if (data)
+      res.json(data);
+    else res.json({});  
+  });
 });
 
 app.post('/makeRequest', (req, res) => {

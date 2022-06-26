@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
-// import Typography from '@mui/material/Typography';
 import Snackbar from '@mui/material/Snackbar';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
 import FilesTable from '../components/FilesTable';
+import uploadFiles from '../actions/uploadFiles';
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
   props,
@@ -43,7 +43,8 @@ export default function Homepage() {
       if (i === maxFilesAllowed) break;
       const file = e.target.files[i];
       const fileIdentifier = file.name + file.size + file.type;
-      if(file.size > 10485760){
+      if(file.size > 10 * 1024 * 1024){
+        console.log(file.size);
         setErrMsg("Maximum size for a file: 10 MiB!");
         setOpenError(true);
       } else if(files.some(f => (f.name + f.size + f.type) === fileIdentifier)){
@@ -56,6 +57,11 @@ export default function Homepage() {
     }
     e.target.files = null;
   };
+
+  const handleUploads = async (files: File[]) => {
+    const res: any = await uploadFiles(files);
+    console.log(res);
+  }
 
   return (
     <Grid justifyContent="center" alignItems="center">
@@ -78,7 +84,6 @@ export default function Homepage() {
         </Grid>
 
         { files.length ? (
-          <form method="post" action="#">
           <Grid>
             <Button 
               variant="outlined" 
@@ -93,10 +98,11 @@ export default function Homepage() {
                 marginTop: "calc(10px + 2vmin)",
                 marginBottom: "calc(10px + 2vmin)"
               }}
+              onClick={() => (handleUploads(files))}
             >
               Upload all files!
             </Button>
-          </Grid></form>) : null }
+          </Grid>) : null }
         <Snackbar open={openError} autoHideDuration={6000} onClose={handleErrorClose}>
           <Alert onClose={handleErrorClose} severity="error" sx={{ width: '100vmin', fontWeight: 'bold', alignSelf: 'right' }}>
             {errMsg}

@@ -1,4 +1,4 @@
-const proxy: String = 'http://localhost:8080'
+const proxy: String = 'http://localhost:8080';
 
 export default async function uploadFile(file: File) {
   const formData = new FormData();
@@ -10,11 +10,9 @@ export default async function uploadFile(file: File) {
   { 
     method: 'POST', 
     body: formData, 
-    // headers: { "Content-Type": "multipart/form-data" } 
   })
   .then(response => response.json())
   .then(result => {
-    console.log('Success:', result);
     res = result;
   })
   .catch(error => {

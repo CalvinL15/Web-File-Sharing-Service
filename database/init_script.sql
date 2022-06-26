@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS files (
   -- file_uploader UUID,
   file_name text CHECK (file_name IS NOT NULL AND file_name != ''),
   file_size integer CHECK (file_size > 0 AND file_size <= 10485760), -- max file size: 10 MiB
+  file_data bytea,  
   file_upload_time timestamp DEFAULT CURRENT_TIMESTAMP,
   last_download_time timestamp DEFAULT CURRENT_TIMESTAMP,
   file_type text,
