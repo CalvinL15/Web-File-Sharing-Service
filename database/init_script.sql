@@ -1,3 +1,6 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION "pg_cron";
+
 CREATE TABLE IF NOT EXISTS files (
   file_id text PRIMARY KEY, -- sha256 string of the file
   -- file_uploader UUID,
@@ -12,11 +15,14 @@ CREATE TABLE IF NOT EXISTS files (
 );
 
 CREATE TABLE IF NOT EXISTS requests (
+  request_id uuid PRIMARY KEY,
   file_id text,
+  file_name text CHECK (file_name IS NOT NULL AND file_name != ''),
   request_reason text CHECK (request_reason IS NOT NULL and request_reason != ''),
+  request_created_time timestamp DEFAULT CURRENT_TIMESTAMP,
   request_type integer CHECK (request_type = 0 OR request_type = 1), -- 0 = block, 1 = unblock
   request_status text DEFAULT 'Pending' CHECK (request_status = 'Pending' OR request_status = 'Declined' OR request_status = 'Accepted'),
-  FOREIGN KEY (file_id) REFERENCES files(file_id) 
+  FOREIGN KEY (file_id) REFERENCES files(file_id)
 );
 
 -- CREATE TABLE IF NOT EXISTS users (

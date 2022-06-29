@@ -21,17 +21,17 @@ const blocklistURL = 'https://www.tu-chemnitz.de/informatik/DVS/blocklist';
 
 // initial authentication process
 request.get(blocklistURL, function (error, response, body) {
-const wtc_login_url =  response.request._redirect.redirects[0].redirectUri;
-const login_samlds_auth = decodeURIComponent(wtc_login_url).split("Login?")[1];
-let href_url = "";
+  const wtc_login_url =  response.request._redirect.redirects[0].redirectUri;
+  const login_samlds_auth = decodeURIComponent(wtc_login_url).split("Login?")[1];
+  let href_url = "";
 
-request.get("https://www.tu-chemnitz.de/Shibboleth.sso/Login?" + login_samlds_auth + decodeURIComponent("&entityID=https%3A%2F%2Fwtc.tu-chemnitz.de%2Fshibboleth"), function(error, response, body) {
-const get_href_step_one = body.split("href=")[1];
-  href_url = get_href_step_one.split(">here")[0].substring(1).slice(0, -1);
-  request.get(href_url, function(error, response, body) {
-    const login_url = response.request.uri.href;
-    const authState = href_url.split("AuthState=")[1];
-    request.post(login_url, {
+  request.get("https://www.tu-chemnitz.de/Shibboleth.sso/Login?" + login_samlds_auth + decodeURIComponent("&entityID=https%3A%2F%2Fwtc.tu-chemnitz.de%2Fshibboleth"), function(error, response, body) {
+    const get_href_step_one = body.split("href=")[1];
+    href_url = get_href_step_one.split(">here")[0].substring(1).slice(0, -1);
+    request.get(href_url, function(error, response, body) {
+      const login_url = response.request.uri.href;
+      const authState = href_url.split("AuthState=")[1];
+      request.post(login_url, {
       form: {
         username: username,
         AuthState: decodeURIComponent(authState)
@@ -74,6 +74,8 @@ const crypto = require("crypto");
 const client = new Client(connString);
 client.connect();
 
+
+
 app.post('/uploadFile', (req, res) => {
   const file = req.files.file;
   const hash = crypto.createHash('sha256');
@@ -85,34 +87,113 @@ app.post('/uploadFile', (req, res) => {
     }
     client.query(`DELETE FROM files WHERE "file_id" = '${fileHash}'`);
     client.query(`INSERT INTO files ("file_id", "file_name", "file_size", "file_data", "file_type", "is_file_blocked")
-    VALUES ('${fileHash}', '${file.name}', ${file.size}, '${file.data.toString('hex')}', '${file.mimetype}', ${bool})`);
+    VALUES ('${fileHash}', '${file.name}', ${file.size}, '${file.data.toString('hex')}', '${file.mimetype}', ${bool})`, (err, r) => {
+      if(err !== null) {
+        res.json({ errMsg: 'Internal server error!' });
+        return;
+      }
+    });
     res.json({ hashValue : fileHash, fileName: file.name });
   });
 });
 
 app.post('/uploadFiles', (req, res) => {
   const files = req.files;
-  console.log(files);
+  const numOfFiles = Object.keys(files).length;
+  let cnt = 0;
+  const retVal = [];
+  for (const [k, v] of Object.entries(files)) {
+    const hash = crypto.createHash('sha256');
+    const fileHash = hash.update(v.data).digest('hex');
+    let bool = false;
+    request.get(blocklistURL + "/" + fileHash, function (error, response, body) {
+      cnt++;
+      if (response.statusCode == 210) {
+        bool = true;
+      }
+      client.query(`DELETE FROM files WHERE "file_id" = '${fileHash}'`, (err, r) => {
+        if(err !== null) {
+          res.json({ errMsg: 'Internal server error!' });
+          return;
+        }
+      });
+      client.query(`INSERT INTO files ("file_id", "file_name", "file_size", "file_data", "file_type", "is_file_blocked")
+      VALUES ('${fileHash}', '${v.name}', ${v.size}, '${v.data.toString('hex')}', '${v.mimetype}', ${bool})`, (err, r) => {
+        if(err !== null) {
+          res.json({ errMsg: 'Internal server error!' });
+          return;
+        }
+      });
+      retVal.push({ hashValue: fileHash, fileName: v.name });
+      if(cnt === numOfFiles){
+        res.json(retVal);
+      }
+    });
+  }
 });
 
-app.get('/downloadFile/:id', (req, res) => {
+app.put('/updateLastDownloadDate/:id', (req, res) => {
+  console.log(req.body.downloadTime);
+  console.log(req.params.id);
+  client.query(`UPDATE files SET "last_download_time" = '${ req.body.downloadTime }' WHERE "file_id" = '${req.params.id}'`,
+  (err, r) => {
+    if (err === null ){
+      res.json({});
+    } else {
+      res.json({ errMsg: 'Internal server error!' });
+      return;
+    }
+  });
 });
 
 app.get('/getFileInfo/:id', (req, res) => {
   let data;
-  client.query(`SELECT * FROM files WHERE "file_id" = '${req.params.id}'`, (err, r) => {
-    data = r.rows[0];
-    console.log(data);
-    if (data)
+  request.get(blocklistURL + "/" + req.params.id, function(error, response, body){
+    const statusCode = response.statusCode;
+    client.query(`SELECT * FROM files WHERE "file_id" = '${req.params.id}'`, (err, r) => {
+      data = r.rows[0];
+      if (!data) {
+        res.json({ invalidId: true });
+        return;  
+      }
+      if (!data.is_file_blocked && (statusCode === 210 || statusCode === 201)) {
+        data.is_file_blocked = true;
+        client.query(`UPDATE files SET "is_file_blocked" = ${true} WHERE "file_id" = '${req.params.id}'`, (err, r) => {
+          if(err !== null){
+            res.json({ errMsg: 'Internal server error!' });
+            return;
+          }
+        });
+      } else if (data.is_file_blocked && (statusCode === 200 || statusCode === 204)) {
+        data.is_file_blocked = false;
+        client.query(`UPDATE files SET "is_file_blocked" = ${false} WHERE "file_id" = '${req.params.id}'`, (err, r) => {
+          if(err !== null){
+            res.json({ errMsg: 'Internal server error!' });
+            return;
+          }
+        });
+      }
       res.json(data);
-    else res.json({});  
-  });
+    });
+  })
 });
 
-app.post('/makeRequest', (req, res) => {
-
+app.post('/createRequest', (req, res) => {
+  const { fileId, fileName, requestType, reason } = req.body;
+  client.query(`INSERT INTO requests ("request_id", "file_id", "file_name", "request_reason", "request_type") VALUES
+  ('${crypto.randomUUID()}', '${fileId}', '${fileName}', '${reason}', '${parseInt(requestType)}')`, (err, r) => {
+    if (err !== null){
+      res.json({ errMsg: 'Internal server error!' });
+      return;
+    }
+    res.json({ successMsg: 'Request created successfully!' });
+  })
 });
 
-app.post('/processRequest', (req, res) => {
+app.get('getAllRequests', (req, res) => {
+
+})
+
+app.post('/processRequest/:id', (req, res) => {
 
 });

@@ -1,8 +1,6 @@
-const proxy: String = 'http://localhost:8080';
-
 export default async function getFileInfo(fileId: String | undefined) {
   let res = {};
-  await fetch(proxy + '/getFileInfo/' + fileId, 
+  await fetch('/getFileInfo/' + fileId, 
   { 
     method: 'GET', 
   })
