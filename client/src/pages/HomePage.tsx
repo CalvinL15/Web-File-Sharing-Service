@@ -109,7 +109,7 @@ export default function Homepage() {
             sx={{  minWidth: "100vmin", height: "10vmin", fontWeight: "bold", color: "#6A8A26", marginTop: "12vmin" }}
             disabled={files.length >= 5}
           >
-            <Typography sx={{fontSize: '2.5vmin'}}>
+            <Typography sx={{fontSize: '2.5vmin', marginTop: "5vmin"}}>
               {fileUploadMsg}
             </Typography>
             <input type="file" multiple hidden onChange={handleFileUpload}></input>

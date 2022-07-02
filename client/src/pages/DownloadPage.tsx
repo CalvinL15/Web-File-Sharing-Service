@@ -45,7 +45,7 @@ export default function DownloadPage() {
         if (res.hasOwnProperty('err_msg')) {
           return (
             <>
-              {res.errMsg}! Please refresh this page...
+              {res.errMsg} Please refresh this page...
             </>
           );
         }
@@ -108,24 +108,36 @@ export default function DownloadPage() {
     );
   }
 
-  const handleDownload = async (data: Buffer) => {
+  const toArrayBuffer = (buf: any) => {
+    const arrBuffer: ArrayBuffer = new ArrayBuffer(buf.data.length);
+    const view = new Uint8Array(arrBuffer);
+    for (let i = 0; i < buf.data.length; i++) {
+      view[i] = buf.data[i];
+    }
+    return arrBuffer;
+  }
+
+  const handleDownload = async (buf: any) => {
     setLoading(true);
-    const blob = new Blob([data as BlobPart], {
-      type: file.file_type,
+    const data: ArrayBuffer = toArrayBuffer(buf);
+    const blob = new Blob([data], {
+      'type': file.file_type,
     });
     const link = document.createElement('a');
     link.style.visibility = 'hidden';
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', file.file_name);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (link.download !== undefined) {
+      link.href = URL.createObjectURL(blob);
+      link.download = file.file_name;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(link.href);
+      document.body.removeChild(link);
+    }
     const res: any = await updateLastDownloadDate(file.file_id, new Date().toISOString());
     if (res.hasOwnProperty('err_msg')) {
       return (
         <>
-          {res.errMsg}! Please refresh this page...
+          {res.errMsg} Please refresh this page...
         </>
       );
     }
@@ -137,14 +149,13 @@ export default function DownloadPage() {
     let requestType: number = 0; // asking the file to be blocked
     if (file.is_file_blocked) requestType = 1;
     const res : any = await createRequest(file.file_id, file.file_name, requestType, reason);
-    console.log(res);
     setLoading2(false);
     setReason('');
     handleClose();
     if (res.hasOwnProperty('errMsg')) {
       return (
         <>
-          {res.errMsg}! Please refresh this page...
+          {res.errMsg} Please refresh this page...
         </>
       );
     }
@@ -171,7 +182,7 @@ export default function DownloadPage() {
               </StyledTableCell>
           </TableRow>
           <TableRow>
-            <StyledTableCell align="center" colSpan={2} sx={{ border: '1px solid;', backgroundColor: '#6A8A26', fontWeight: 'bold', color: 'white' }}>File Type</StyledTableCell>
+            <StyledTableCell align="center" colSpan={2} sx={{ border: '1px solid;', backgroundColor: '#6A8A26', fontWeight: 'bold', color: 'white' }}>File Type (MIME)</StyledTableCell>
             <StyledTableCell align="right" colSpan={2}>{file.file_type}</StyledTableCell>
           </TableRow>
           <TableRow>

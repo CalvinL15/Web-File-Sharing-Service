@@ -1,6 +1,7 @@
 const config = require('./config.json');
 const cors = require('cors');
 const { username, password, PORT } = config;
+const { Blob } = require("buffer");
 
 const { Pool, Client } = require('pg');
 
@@ -55,6 +56,9 @@ request.get(blocklistURL, function (error, response, body) {
               RelayState: relay_state
             }
           }, function (error, response, body) {
+            request.get(blocklistURL + "/" + "8f0737d5395aef2796637c95f1a195057b020841a0cbe9848d87f2d3b6897e22", function (error, response, body) {
+              console.log(response.statusCode);
+            });
             console.log('Successfully authenticated!');
           })
         })
@@ -87,13 +91,13 @@ app.post('/uploadFile', (req, res) => {
     }
     client.query(`DELETE FROM files WHERE "file_id" = '${fileHash}'`);
     client.query(`INSERT INTO files ("file_id", "file_name", "file_size", "file_data", "file_type", "is_file_blocked")
-    VALUES ('${fileHash}', '${file.name}', ${file.size}, '${file.data.toString('hex')}', '${file.mimetype}', ${bool})`, (err, r) => {
-      if(err !== null) {
-        res.json({ errMsg: 'Internal server error!' });
+    VALUES ('${fileHash}', '${file.name}', ${file.size}, '${['\\x' + file.data.toString('hex')]}', '${file.mimetype}', ${bool})`, (err, r) => {
+      if (err !== null) {
+        res.status(500).json({ errMsg: 'Internal server error!' });
         return;
       }
+      res.status(201).json({ hashValue : fileHash, fileName: file.name });
     });
-    res.json({ hashValue : fileHash, fileName: file.name });
   });
 });
 
@@ -113,34 +117,32 @@ app.post('/uploadFiles', (req, res) => {
       }
       client.query(`DELETE FROM files WHERE "file_id" = '${fileHash}'`, (err, r) => {
         if(err !== null) {
-          res.json({ errMsg: 'Internal server error!' });
+          res.status(500).json({ errMsg: 'Internal server error!' });
           return;
         }
       });
       client.query(`INSERT INTO files ("file_id", "file_name", "file_size", "file_data", "file_type", "is_file_blocked")
-      VALUES ('${fileHash}', '${v.name}', ${v.size}, '${v.data.toString('hex')}', '${v.mimetype}', ${bool})`, (err, r) => {
+      VALUES ('${fileHash}', '${v.name}', ${v.size}, '${['\\x' + v.data.toString('hex')]}', '${v.mimetype}', ${bool})`, (err, r) => {
         if(err !== null) {
-          res.json({ errMsg: 'Internal server error!' });
+          res.status(500).json({ errMsg: 'Internal server error!' });
           return;
         }
       });
       retVal.push({ hashValue: fileHash, fileName: v.name });
       if(cnt === numOfFiles){
-        res.json(retVal);
+        res.status(201).json(retVal);
       }
     });
   }
 });
 
 app.put('/updateLastDownloadDate/:id', (req, res) => {
-  console.log(req.body.downloadTime);
-  console.log(req.params.id);
   client.query(`UPDATE files SET "last_download_time" = '${ req.body.downloadTime }' WHERE "file_id" = '${req.params.id}'`,
   (err, r) => {
     if (err === null ){
-      res.json({});
+      res.status(200).json({});
     } else {
-      res.json({ errMsg: 'Internal server error!' });
+      res.status(500).json({ errMsg: 'Internal server error!' });
       return;
     }
   });
@@ -160,7 +162,7 @@ app.get('/getFileInfo/:id', (req, res) => {
         data.is_file_blocked = true;
         client.query(`UPDATE files SET "is_file_blocked" = ${true} WHERE "file_id" = '${req.params.id}'`, (err, r) => {
           if(err !== null){
-            res.json({ errMsg: 'Internal server error!' });
+            res.status(500).json({ errMsg: 'Internal server error!' });
             return;
           }
         });
@@ -168,14 +170,14 @@ app.get('/getFileInfo/:id', (req, res) => {
         data.is_file_blocked = false;
         client.query(`UPDATE files SET "is_file_blocked" = ${false} WHERE "file_id" = '${req.params.id}'`, (err, r) => {
           if(err !== null){
-            res.json({ errMsg: 'Internal server error!' });
+            res.status(500).json({ errMsg: 'Internal server error!' });
             return;
           }
         });
       }
-      res.json(data);
+      res.status(200).json(data);
     });
-  })
+  });
 });
 
 app.post('/createRequest', (req, res) => {
@@ -183,17 +185,76 @@ app.post('/createRequest', (req, res) => {
   client.query(`INSERT INTO requests ("request_id", "file_id", "file_name", "request_reason", "request_type") VALUES
   ('${crypto.randomUUID()}', '${fileId}', '${fileName}', '${reason}', '${parseInt(requestType)}')`, (err, r) => {
     if (err !== null){
-      res.json({ errMsg: 'Internal server error!' });
+      res.status(500).json({ errMsg: 'Internal server error!' });
       return;
     }
-    res.json({ successMsg: 'Request created successfully!' });
+    res.status(201).json({ successMsg: 'Request created successfully!' });
   })
 });
 
-app.get('getAllRequests', (req, res) => {
-
+app.get('/getAllRequests', (req, res) => {
+ client.query(`SELECT * FROM requests WHERE "request_status" = 'Pending'`, (err, r) => {
+   if (err !== null){
+    res.status(500).json({ errMsg: 'Internal server error!' });
+    return;
+   }
+   data = r.rows;
+   res.status(200).json(data);
+ })
 })
 
 app.post('/processRequest/:id', (req, res) => {
-
+  console.log(req.params.id);
+  console.log(req.body);
+  const { requestType, decision, fileId } = req.body;
+  if (decision === 'acc' && parseInt(requestType) === 0) {
+    console.log(fileId);
+    request.put(blocklistURL + "/" + fileId,  function (error, response, body) {
+      console.log(response.statusCode);
+      if(response.statusCode === 201) {
+        client.query(`UPDATE files SET "is_file_blocked" = ${true} WHERE "file_id" = '${fileId}'`, (err, r) => {
+          if (err !== null) {
+            res.status(500).json({ errMsg: 'Internal server error!' });
+            return;
+          }
+        });
+      }
+      client.query(`UPDATE requests SET "request_status" = 'Accepted' WHERE "request_id" = '${req.params.id}'`, (err, r) => {
+        if (err !== null) {
+          res.status(500).json({ errMsg: 'Internal server error!' });
+          return;
+        }
+        res.status(200).json({});
+      });
+    });
+  } else if (decision === 'acc' && parseInt(requestType) === 1) {
+    request.delete(blocklistURL + "/" + fileId,  function (error, response, body) {
+      console.log(response.statusCode);
+      if(response.statusCode === 204) {
+        client.query(`UPDATE files SET "is_file_blocked" = ${false} WHERE "file_id" = '${fileId}'`, (err, r) => {
+          if (err !== null) {
+            res.status(500).json({ errMsg: 'Internal server error!' });
+            return;
+          }
+        });
+      }
+      client.query(`UPDATE requests SET "request_status" = 'Accepted' WHERE "request_id" = '${req.params.id}'`, (err, r) => {
+        if (err !== null) {
+          res.status(500).json({ errMsg: 'Internal server error!' });
+          return;
+        }
+        res.status(200).json({});
+      });
+    });
+  } else if (decision === 'dec' ) {
+    client.query(`UPDATE requests SET "request_status" = 'Declined' WHERE "request_id" = '${req.params.id}'`, (err, r) => {
+      if (err !== null) {
+        res.status(500).json({ errMsg: 'Internal server error!' });
+        return;
+      }
+      res.status(200).json({});
+    });
+  } else {
+    res.status(500).json({ errMsg: 'Internal server error!' });
+  }
 });

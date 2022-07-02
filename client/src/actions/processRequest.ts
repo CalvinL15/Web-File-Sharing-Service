@@ -1,12 +1,10 @@
-export default async function createRequest(fileId: string | undefined, fileName: string, requestType: number, reason: string) {
+export default async function processRequest(requestId: string, requestType: number, decision: string, fileId: string) {
   let res = {};
   const formData = new FormData();
-  if(fileId === undefined) return;
-  formData.append('fileId', fileId);
-  formData.append('fileName', fileName);
   formData.append('requestType', requestType.toString());
-  formData.append('reason', reason);
-  await fetch('/createRequest/', 
+  formData.append('decision', decision);
+  formData.append('fileId', fileId);
+  await fetch('/processRequest/' + requestId, 
   { 
     method: 'POST', 
     body: formData

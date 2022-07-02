@@ -59,23 +59,29 @@ export default function FilesTable(props: { files: File[], setFiles: React.Dispa
         <Table aria-label="customized table">
           <TableHead>
             <TableRow>
-              <StyledTableCell>File Name</StyledTableCell>
-              <StyledTableCell>File Size</StyledTableCell>
-              <StyledTableCell>File Type</StyledTableCell>
-              <StyledTableCell align="center">Actions</StyledTableCell>
+              <StyledTableCell sx={{ width: '40%' }}>File Name</StyledTableCell>
+              <StyledTableCell sx={{ width: '15%' }}>File Size</StyledTableCell>
+              <StyledTableCell sx={{ width: '25%' }}>File Type</StyledTableCell>
+              <StyledTableCell sx={{ width: '20%' }} align="center">Actions</StyledTableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {files.map((f: File) => (
               <StyledTableRow key={f.name + f.size + f.type}>
                 <StyledTableCell component="th" scope="row">
-                  {f?.name}
+                  <Typography>
+                    {f?.name}
+                  </Typography>
                 </StyledTableCell>
                 <StyledTableCell component="th" scope="row">
-                  {f?.size}
+                  <Typography>
+                    {f?.size}
+                  </Typography>
                 </StyledTableCell>
                 <StyledTableCell component="th" scope="row">
-                  {f?.type ? f?.type : "." + f?.name.split(".")[1]}
+                  <Typography>
+                    {f?.type ? f?.type : "." + f?.name.split(".")[1]}
+                  </Typography>
                 </StyledTableCell>
                 <StyledTableCell align="center">
                   <LoadingButton

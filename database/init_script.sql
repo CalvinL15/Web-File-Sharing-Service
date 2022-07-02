@@ -39,5 +39,3 @@ CREATE TABLE IF NOT EXISTS requests (
 --   FOREIGN KEY (username) REFERENCES users(username),
 --   FOREIGN KEY (file_id) REFERENCES files(file_id)
 -- )
-
-
