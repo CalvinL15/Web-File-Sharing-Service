@@ -1,5 +1,4 @@
 const config = require('./config.json');
-const cors = require('cors');
 const { username, password, PORT } = config;
 const { Blob } = require("buffer");
 
@@ -55,9 +54,6 @@ request.get(blocklistURL, function (error, response, body) {
               RelayState: relay_state
             }
           }, function (error, response, body) {
-            request.get(blocklistURL + "/" + "8f0737d5395aef2796637c95f1a195057b020841a0cbe9848d87f2d3b6897e22", function (error, response, body) {
-              console.log(response.statusCode);
-            });
             console.log('Successfully authenticated!');
           })
         })
@@ -66,7 +62,6 @@ request.get(blocklistURL, function (error, response, body) {
   })
 })
 
-app.use(cors());
 app.use(fileUpload({
   limits: { fileSize: 50 * 1024 * 1024 }
 }));
