@@ -1,0 +1,1 @@
+DELETE from files WHERE files.last_download_time < now() - interval '7 days';

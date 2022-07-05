@@ -1,5 +1,10 @@
 {
   "username": "lcal",
   "password": "Calvin362592_TUC",
-  "PORT": 8080
+  "PORT": 8080,
+  "PG_HOST": "pgsql.hrz.tu-chemnitz.de",
+  "PG_PORT": "5432",
+  "PG_DATABASE": "dbw_project_db",
+  "PG_USER": "dbw_project_db_rw",
+  "PG_PASSWORD": "Ieh2ishe4"  
 }

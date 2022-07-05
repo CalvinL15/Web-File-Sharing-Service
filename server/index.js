@@ -3,10 +3,9 @@ const cors = require('cors');
 const { username, password, PORT } = config;
 const { Blob } = require("buffer");
 
-const { Pool, Client } = require('pg');
+const { Client } = require('pg');
 
 const express = require('express');
-const bodyParser = require('body-parser');
 const fileUpload = require('express-fileupload');
 const cheerio = require('cheerio');
 
@@ -72,7 +71,9 @@ app.use(fileUpload({
   limits: { fileSize: 50 * 1024 * 1024 }
 }));
 
-const connString = "postgres://dbw_project_db_rw:Ieh2ishe4@pgsql.hrz.tu-chemnitz.de/dbw_project_db";
+const { PG_HOST, PG_USER, PG_DATABASE, PG_PASSWORD } = config;
+
+const connString = `postgres://${PG_USER}:${PG_PASSWORD}@${PG_HOST}/${PG_DATABASE}`;
 const crypto = require("crypto");
 
 const client = new Client(connString);
@@ -204,8 +205,6 @@ app.get('/getAllRequests', (req, res) => {
 })
 
 app.post('/processRequest/:id', (req, res) => {
-  console.log(req.params.id);
-  console.log(req.body);
   const { requestType, decision, fileId } = req.body;
   if (decision === 'acc' && parseInt(requestType) === 0) {
     console.log(fileId);

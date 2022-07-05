@@ -25,6 +25,31 @@ CREATE TABLE IF NOT EXISTS requests (
   FOREIGN KEY (file_id) REFERENCES files(file_id)
 );
 
+CREATE OR REPLACE FUNCTION forbidden() RETURNS TRIGGER AS $$
+  BEGIN
+    IF TG_LEVEL = 'STATEMENT' THEN
+      RAISE feature_not_supported;
+    END IF;
+    RETURN NULL;
+  END;  
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION before_remove_files_func() RETURNS TRIGGER AS $$
+  BEGIN
+    DELETE FROM requests WHERE requests.file_id = OLD.file_id;
+    RETURN OLD;
+  END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER before_remove_files BEFORE DELETE ON files
+  FOR EACH ROW
+    WHEN (pg_trigger_depth() = 0)
+      EXECUTE PROCEDURE before_remove_files_func(); 
+
+CREATE TRIGGER before_truncate_files BEFORE TRUNCATE ON files
+  WHEN (pg_trigger_depth() = 0)
+    EXECUTE PROCEDURE forbidden(); 
+
 -- CREATE TABLE IF NOT EXISTS users (
 --   user_id UUID PRIMARY KEY,
 --   username text CHECK (username IS NOT NULL AND length(username) >= 6),

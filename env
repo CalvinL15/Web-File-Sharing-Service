@@ -1,0 +1,5 @@
+PGHOST='pgsql.hrz.tu-chemnitz.de'
+PGPORT='5432'
+PGDATABASE='dbw_project_db'
+PGUSER='dbw_project_db_rw'
+PGPASSWORD='Ieh2ishe4'
