@@ -44,6 +44,7 @@ request.get(blocklistURL, function (error, response, body) {
           }
         }, 
         function (error, response, body) {
+          console.log(body);
           const $ = cheerio.load(body);
           $.html();
           const saml_value = $('input')[1].attribs.value;
@@ -77,6 +78,7 @@ client.connect();
 
 
 app.post('/uploadFile', (req, res) => {
+  console.log(req.files);
   const file = req.files.file;
   const hash = crypto.createHash('sha256');
   const fileHash = hash.update(file.data).digest('hex');
@@ -171,20 +173,28 @@ app.get('/getFileInfo/:id', (req, res) => {
           }
         });
       }
+      console.log(data);
       res.status(200).json(data);
     });
   });
 });
 
 app.post('/createRequest', (req, res) => {
+  console.log(req.body);
   const { fileId, fileName, requestType, reason } = req.body;
+  client.query(`DELETE FROM requests WHERE "file_id" = '${fileId}'`, (err, r) => {
+    if (err !== null){
+      res.status(500).json({ errMsg: 'Internal server error!' });
+      return;
+    }
+  })
   client.query(`INSERT INTO requests ("request_id", "file_id", "file_name", "request_reason", "request_type") VALUES
   ('${crypto.randomUUID()}', '${fileId}', '${fileName}', '${reason}', '${parseInt(requestType)}')`, (err, r) => {
     if (err !== null){
       res.status(500).json({ errMsg: 'Internal server error!' });
       return;
     }
-    res.status(201).json({ successMsg: 'Request created successfully!' });
+    res.status(201).json({});
   })
 });
 
@@ -201,10 +211,9 @@ app.get('/getAllRequests', (req, res) => {
 
 app.post('/processRequest/:id', (req, res) => {
   const { requestType, decision, fileId } = req.body;
+  console.log(req.body);
   if (decision === 'acc' && parseInt(requestType) === 0) {
-    console.log(fileId);
     request.put(blocklistURL + "/" + fileId,  function (error, response, body) {
-      console.log(response.statusCode);
       if(response.statusCode === 201) {
         client.query(`UPDATE files SET "is_file_blocked" = ${true} WHERE "file_id" = '${fileId}'`, (err, r) => {
           if (err !== null) {
@@ -220,7 +229,7 @@ app.post('/processRequest/:id', (req, res) => {
         }
         res.status(200).json({});
       });
-    });
+    });ya
   } else if (decision === 'acc' && parseInt(requestType) === 1) {
     request.delete(blocklistURL + "/" + fileId,  function (error, response, body) {
       console.log(response.statusCode);

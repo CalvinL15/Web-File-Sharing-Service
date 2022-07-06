@@ -173,7 +173,7 @@ export default function DownloadPage() {
         <TableBody>
           <TableRow>
             <StyledTableCell align="center" colSpan={2} sx={{ border: '1px solid;', backgroundColor: '#6A8A26', fontWeight: 'bold', color: 'white' }}>File Size</StyledTableCell>
-            <StyledTableCell align="right" colSpan={2}>{file.file_size}</StyledTableCell>
+            <StyledTableCell align="right" colSpan={2}>{file.file_size} bytes</StyledTableCell>
           </TableRow>
           <TableRow>
             <StyledTableCell align="center" colSpan={2} sx={{ border: '1px solid;', backgroundColor: '#6A8A26', fontWeight: 'bold', color: 'white' }}>Upload date</StyledTableCell>

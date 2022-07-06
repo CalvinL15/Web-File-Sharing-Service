@@ -9,6 +9,7 @@ export default async function uploadFiles(file: File[]) {
   .then(response => response.json())
   .then(result => {
     res = result;
+    console.log(res);
   })
   .catch(error => {
     console.error('Error:', error);

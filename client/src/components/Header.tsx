@@ -19,8 +19,6 @@ export default function Header() {
             <Typography sx={{ fontWeight: 'bold' }}>Web File Sharing Service</Typography>
           </Grid>
           <Grid>
-            {/* <a href="/about" style={{ 'color': 'white', 'fontSize': '3.5vmin' }}>About</a>
-            <span style={{ 'color': 'white', 'fontSize': '4vmin' }}>&nbsp;&nbsp;|&nbsp;&nbsp;</span> */}
             <a href="/home" style={{ 'color': 'white', 'fontSize': '3vmin' }}>Home Page</a>
             <span style={{ 'color': 'white', 'fontSize': '4vmin' }}>&nbsp;&nbsp;|&nbsp;&nbsp;</span>
             <a href="/admin" style={{ 'color': 'white', 'fontSize': '3vmin' }}>Admin Page</a>

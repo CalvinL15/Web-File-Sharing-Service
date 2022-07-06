@@ -5,7 +5,6 @@ import {
   useLocation,
 } from 'react-router-dom';
 import Header from './components/Header';
-// import About from './pages/About';
 import AdminPage from './pages/AdminPage';
 import DownloadPage from './pages/DownloadPage';
 import HomePage from './pages/HomePage';
@@ -36,7 +35,6 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/home" element={<HomePage />} />
-          {/* <Route path="/about" element={<About />} /> */}
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/download" element={<DownloadPage />} />
           <Route path="/download/:id" element={<DownloadPage />} />

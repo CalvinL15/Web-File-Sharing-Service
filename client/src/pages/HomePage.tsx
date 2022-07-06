@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import Button from '@mui/material/Button';
 import LoadingButton from '@mui/lab/LoadingButton';
 import Dialog from '@mui/material/Dialog';
@@ -29,7 +29,7 @@ export default function Homepage() {
   const [files, setFiles] = React.useState<File[]>([]);
   const [openError, setOpenError] = React.useState(false);
   const [errMsg, setErrMsg] = React.useState("");
-  const [fileUploadMsg, setFileUploadMsg] = React.useState("Select file(s) to be uploaded...");
+  // const [fileUploadMsg, setFileUploadMsg] = React.useState("Select file(s) to be uploaded...");
   const [urls, setURLs] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
 
@@ -40,22 +40,20 @@ export default function Homepage() {
     setOpenError(false);
   };
 
-  useEffect(() => {
-    if(files.length >= 5){
-      setFileUploadMsg("Maximum of 5 files can be queued for upload!");
-    } else {
-      setFileUploadMsg("Select file(s) to be uploaded...");
-    }
-  }, [files]);
+  // useEffect(() => {
+  //   if(files.length >= 5){
+  //     setFileUploadMsg("Maximum of 5 files can be queued for upload!");
+  //   } else {
+  //     setFileUploadMsg("Select file(s) to be uploaded...");
+  //   }
+  // }, [files]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if(!e.target.files) {
       return;
     }
-    const maxFilesAllowed = 5 - files.length;
-
+    
     for(let i = 0; i<e.target.files.length; i++){
-      if (i === maxFilesAllowed) break;
       const file = e.target.files[i];
       const fileIdentifier = file.name + file.size + file.type;
       if(file.size > 10 * 1024 * 1024){
@@ -106,10 +104,10 @@ export default function Homepage() {
             startIcon={ <UploadFileIcon/> }
             size="large"
             color="success"
-            sx={{  minWidth: "100vmin", height: "10vmin", fontWeight: "bold", color: "#6A8A26", marginTop: "12vmin" }}
-            disabled={files.length >= 5}
+            sx={{  minWidth: "100vmin", height: "10vh", fontWeight: "bold", color: "#6A8A26", marginTop: "12vmin" }}
+            // disabled={files.length >= 5}
           >
-              {fileUploadMsg}
+              {"Select file(s) to be uploaded..."}
             <input type="file" multiple hidden onChange={handleFileUpload}></input>
           </Button>
         </Grid>
