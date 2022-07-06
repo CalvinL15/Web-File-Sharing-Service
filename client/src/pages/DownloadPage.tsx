@@ -159,7 +159,7 @@ export default function DownloadPage() {
         </>
       );
     }
-    setSnackbarMsg(res.successMsg);
+    setSnackbarMsg("Request created successfully!");
     setSnackbar(true);
   }
 

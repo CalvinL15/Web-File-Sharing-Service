@@ -1,6 +1,6 @@
 {
   "username": "lcal",
-  "password": "..........",
+  "password": "........",
   "PORT": 8080,
   "PG_HOST": "pgsql.hrz.tu-chemnitz.de",
   "PG_PORT": "5432",
