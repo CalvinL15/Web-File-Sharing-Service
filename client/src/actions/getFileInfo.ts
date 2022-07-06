@@ -11,6 +11,5 @@ export default async function getFileInfo(fileId: String | undefined) {
   .catch(error => {
     console.error('Error:', error);
   });
-  console.log(res);
   return res;
 }

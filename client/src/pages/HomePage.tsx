@@ -57,7 +57,6 @@ export default function Homepage() {
       const file = e.target.files[i];
       const fileIdentifier = file.name + file.size + file.type;
       if(file.size > 10 * 1024 * 1024){
-        console.log(file.size);
         setErrMsg("Maximum size for a file: 10 MiB!");
         setOpenError(true);
       } else if(files.some(f => (f.name + f.size + f.type) === fileIdentifier)){
