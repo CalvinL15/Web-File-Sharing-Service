@@ -1,7 +1,7 @@
 # dbw-final-project
 This project is divided into 3 sections: the database, the server, and the client. 
 
-1. First, the dependencies of both server and client need to be installed. Run yarn install in the root directory of the project and also in the client folder.
+1. First, install the dependencies of both server and client. Run yarn install in the root directory of the project and also in the client folder.
 
 2. In case that you want to use your own (PostgreSQL) database to run the project, execute the provided initialization script database/init_script.sql in your database server. You would also need to change the database credentials configured in the server/config.json file and the ./env file. In addition, you would also need to set up your own cron job. For more detail, please refer to the project term paper, "Removal of inactive files" section.
 
