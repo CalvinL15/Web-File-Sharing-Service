@@ -1,4 +1,6 @@
-# dbw-final-project
+# Web File Sharing Service
+### For details regarding the task, please check the dbw-project-task-description.pdf file!
+
 This project is divided into 3 sections: the database, the server, and the client. 
 
 1. First, install the dependencies of both server and client. Run yarn install in the root directory of the project and also in the client folder.
